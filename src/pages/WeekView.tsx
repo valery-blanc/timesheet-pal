@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format, startOfWeek, addDays, isWeekend } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/navigation/BottomNav";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const HOURS = Array.from({ length: 11 }, (_, i) => i + 8);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function WeekViewPage() {
   const store = useTimesheetStore();
@@ -15,6 +15,14 @@ export default function WeekViewPage() {
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const clientMap = new Map(store.clients.map(c => [c.id, c]));
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (tableRef.current) {
+      const row = tableRef.current.querySelector('[data-hour="8"]');
+      if (row) row.scrollIntoView({ block: "start" });
+    }
+  }, []);
 
   const prevWeek = () => setWeekStart(d => addDays(d, -7));
   const nextWeek = () => setWeekStart(d => addDays(d, 7));
@@ -37,7 +45,7 @@ export default function WeekViewPage() {
           </Button>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <div ref={tableRef} className="overflow-auto rounded-xl border border-border bg-card flex-1" style={{ maxHeight: "60vh" }}>
           <table className="w-full text-xs">
             <thead>
               <tr>
@@ -66,7 +74,7 @@ export default function WeekViewPage() {
             </thead>
             <tbody>
               {HOURS.map(hour => (
-                <tr key={hour} className="border-t border-border">
+                <tr key={hour} data-hour={hour} className="border-t border-border">
                   <td className="sticky left-0 bg-card z-10 px-1.5 py-1.5 text-muted-foreground font-mono text-[10px]">
                     {String(hour).padStart(2, "0")}:00
                   </td>
@@ -84,10 +92,14 @@ export default function WeekViewPage() {
                       >
                         {client && (
                           <div
-                            className="rounded h-5 w-full"
+                            className="rounded h-5 w-full flex items-center justify-center px-0.5"
                             style={{ backgroundColor: `hsl(${client.color} / 0.3)` }}
                             title={client.name}
-                          />
+                          >
+                            <span className="text-[8px] font-medium truncate leading-none" style={{ color: `hsl(${client.color})` }}>
+                              {client.name}
+                            </span>
+                          </div>
                         )}
                       </td>
                     );

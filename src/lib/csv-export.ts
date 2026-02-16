@@ -4,7 +4,7 @@ import { fr } from "date-fns/locale";
 
 export type ExportScope = "day" | "week" | "month";
 
-export function exportToCSV(
+export async function exportToCSV(
   entries: TimeEntry[],
   clients: Client[],
   activities: Activity[],
@@ -56,16 +56,22 @@ export function exportToCSV(
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
 
-  // Use Web Share API if available (mobile), otherwise fallback to download
-  const file = new File([blob], filename, { type: "text/csv" });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    navigator.share({
-      files: [file],
-      title: "Timesheet Export",
-    }).catch(() => {
-      // Fallback to download if share is cancelled
-      downloadFile(blob, filename);
-    });
+  const file = new File([blob], filename, { type: "text/csv;charset=utf-8;" });
+  
+  // Always try Web Share API first
+  if (navigator.share) {
+    try {
+      const shareData: ShareData = { title: "Timesheet Export" };
+      if (navigator.canShare?.({ files: [file] })) {
+        shareData.files = [file];
+      }
+      await navigator.share(shareData);
+    } catch (err) {
+      // User cancelled or share failed — fallback to download
+      if ((err as DOMException)?.name !== "AbortError") {
+        downloadFile(blob, filename);
+      }
+    }
   } else {
     downloadFile(blob, filename);
   }
