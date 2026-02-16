@@ -1,5 +1,4 @@
 import { Client } from "@/types/timesheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,8 +14,8 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
   const activeClients = clients.filter(c => c.active);
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between px-1">
+    <div className="flex flex-col gap-1 h-full">
+      <div className="flex items-center justify-between px-1 shrink-0">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Client</span>
         <button
           onClick={() => navigate("/clients")}
@@ -26,7 +25,7 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
           Gérer
         </button>
       </div>
-      <ScrollArea className="max-h-[28vh]">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-1">
           {activeClients.length === 0 && (
             <p className="text-xs text-muted-foreground py-3 text-center">
@@ -38,7 +37,7 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
               key={client.id}
               onClick={() => onSelect(client.id)}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all touch-target",
+                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all",
                 selectedId === client.id
                   ? "bg-card shadow-sm ring-2 ring-primary/30"
                   : "hover:bg-card/60 active:bg-card"
@@ -57,7 +56,7 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
             </button>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
