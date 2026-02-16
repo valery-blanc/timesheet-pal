@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Lock, Unlock, Share2, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Unlock, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -51,9 +51,6 @@ export function TopBar({ date, isFrozen, onPrevDay, onNextDay, onToday, onToggle
           className={cn("h-8 w-8", isFrozen && "text-primary")}
         >
           {isFrozen ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => navigate("/week")} className="h-8 w-8">
-          <CalendarDays className="h-4 w-4" />
         </Button>
         <Button variant="ghost" size="icon" onClick={onExport} className="h-8 w-8">
           <Share2 className="h-4 w-4" />

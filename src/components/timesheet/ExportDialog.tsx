@@ -47,7 +47,7 @@ export function ExportDialog({ open, onOpenChange, date, entries, clients, activ
               </Button>
             ))}
           </div>
-          <Button onClick={handleExport}>Télécharger</Button>
+          <Button onClick={handleExport}>Envoyer</Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -88,9 +88,9 @@ const Index = () => {
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background">
-      {/* Client section ~30% */}
-      <div className="flex-none safe-top" style={{ height: "28%" }}>
-        <div className="h-full max-w-lg mx-auto px-3 pt-2 overflow-hidden">
+      {/* Client section ~28% */}
+      <div className="flex-none safe-top overflow-y-auto" style={{ height: "28%" }}>
+        <div className="h-full max-w-lg mx-auto px-3 pt-2">
           <ClientSelector
             clients={store.clients}
             selectedId={selectedClientId}
@@ -99,9 +99,9 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Activity section ~20% */}
-      <div className="flex-none" style={{ height: "15%" }}>
-        <div className="h-full max-w-lg mx-auto px-3 overflow-hidden">
+      {/* Activity section - single line */}
+      <div className="flex-none py-1">
+        <div className="max-w-lg mx-auto px-3">
           <ActivityChips
             activities={store.activities}
             selectedId={selectedActivityId}
