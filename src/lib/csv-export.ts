@@ -58,23 +58,17 @@ export async function exportToCSV(
 
   const file = new File([blob], filename, { type: "text/csv;charset=utf-8;" });
   
-  // Always try Web Share API first
-  if (navigator.share) {
+  // Try Web Share API with file
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
-      const shareData: ShareData = { title: "Timesheet Export" };
-      if (navigator.canShare?.({ files: [file] })) {
-        shareData.files = [file];
-      }
-      await navigator.share(shareData);
+      await navigator.share({ files: [file], title: "Timesheet Export" });
+      return;
     } catch (err) {
-      // User cancelled or share failed — fallback to download
-      if ((err as DOMException)?.name !== "AbortError") {
-        downloadFile(blob, filename);
-      }
+      if ((err as DOMException)?.name === "AbortError") return;
     }
-  } else {
-    downloadFile(blob, filename);
   }
+  // Fallback: direct download
+  downloadFile(blob, filename);
 }
 
 function downloadFile(blob: Blob, filename: string) {

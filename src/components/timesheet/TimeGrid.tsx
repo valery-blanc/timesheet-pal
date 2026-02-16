@@ -35,7 +35,7 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
   }, []);
 
   return (
-    <div className="flex flex-col gap-0.5 h-full" ref={scrollRef}>
+    <div className="flex flex-col gap-0.5" ref={scrollRef}>
       {isFrozen && (
         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-[hsl(var(--frozen))] text-xs text-muted-foreground mb-1">
           <Lock className="h-3 w-3" />
