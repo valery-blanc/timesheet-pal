@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { useTimesheetStore } from "@/hooks/useTimesheetStore";
 import { TopBar } from "@/components/timesheet/TopBar";
@@ -31,6 +31,33 @@ const Index = () => {
   const isFrozen = store.isDayFrozen(dateStr);
   const dayEntries = store.getEntriesForDate(dateStr);
 
+  // Swipe handling for day navigation
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const swiping = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    swiping.current = false;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    // Only swipe if horizontal movement > 60px and more horizontal than vertical
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx > 0) {
+        setCurrentDate(d => subDays(d, 1));
+      } else {
+        setCurrentDate(d => addDays(d, 1));
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, []);
+
   const handleCellTap = useCallback((hour: number) => {
     if (!selectedClientId || !selectedActivityId) {
       const existing = store.entries.find(e => e.date === dateStr && e.hour === hour);
@@ -60,8 +87,31 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-lg mx-auto px-3 py-2 flex flex-col gap-3">
+    <div className="h-[100dvh] flex flex-col bg-background">
+      {/* Client section ~30% */}
+      <div className="flex-none safe-top" style={{ height: "28%" }}>
+        <div className="h-full max-w-lg mx-auto px-3 pt-2 overflow-hidden">
+          <ClientSelector
+            clients={store.clients}
+            selectedId={selectedClientId}
+            onSelect={setSelectedClientId}
+          />
+        </div>
+      </div>
+
+      {/* Activity section ~20% */}
+      <div className="flex-none" style={{ height: "15%" }}>
+        <div className="h-full max-w-lg mx-auto px-3 overflow-hidden">
+          <ActivityChips
+            activities={store.activities}
+            selectedId={selectedActivityId}
+            onSelect={setSelectedActivityId}
+          />
+        </div>
+      </div>
+
+      {/* Toolbar + Time grid section ~50% */}
+      <div className="flex-1 min-h-0 flex flex-col max-w-lg mx-auto w-full px-3">
         <TopBar
           date={currentDate}
           isFrozen={isFrozen}
@@ -73,26 +123,20 @@ const Index = () => {
           onSave={() => toast.success("Données sauvegardées automatiquement")}
         />
 
-        <ClientSelector
-          clients={store.clients}
-          selectedId={selectedClientId}
-          onSelect={setSelectedClientId}
-        />
-
-        <ActivityChips
-          activities={store.activities}
-          selectedId={selectedActivityId}
-          onSelect={setSelectedActivityId}
-        />
-
-        <TimeGrid
-          date={currentDate}
-          entries={dayEntries}
-          clients={store.clients}
-          activities={store.activities}
-          isFrozen={isFrozen}
-          onCellTap={handleCellTap}
-        />
+        <div
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <TimeGrid
+            date={currentDate}
+            entries={dayEntries}
+            clients={store.clients}
+            activities={store.activities}
+            isFrozen={isFrozen}
+            onCellTap={handleCellTap}
+          />
+        </div>
       </div>
 
       <BottomNav />

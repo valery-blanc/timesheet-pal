@@ -2,6 +2,7 @@ import { TimeEntry, Client, Activity } from "@/types/timesheet";
 import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react";
 import { format, isWeekend } from "date-fns";
+import { useEffect, useRef } from "react";
 
 interface TimeGridProps {
   date: Date;
@@ -12,16 +13,29 @@ interface TimeGridProps {
   onCellTap: (hour: number) => void;
 }
 
-const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 8-18
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
 
 export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellTap }: TimeGridProps) {
   const dateStr = format(date, "yyyy-MM-dd");
   const isWe = isWeekend(date);
   const clientMap = new Map(clients.map(c => [c.id, c]));
   const activityMap = new Map(activities.map(a => [a.id, a]));
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
+
+  // Auto-scroll to 8h on first mount
+  useEffect(() => {
+    if (scrollRef.current && !hasScrolled.current) {
+      const row = scrollRef.current.querySelector('[data-hour="8"]');
+      if (row) {
+        row.scrollIntoView({ block: "start" });
+        hasScrolled.current = true;
+      }
+    }
+  }, []);
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5 h-full" ref={scrollRef}>
       {isFrozen && (
         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-[hsl(var(--frozen))] text-xs text-muted-foreground mb-1">
           <Lock className="h-3 w-3" />
@@ -37,10 +51,11 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
           return (
             <button
               key={hour}
+              data-hour={hour}
               onClick={() => onCellTap(hour)}
               disabled={isFrozen}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all touch-target border-b border-border last:border-b-0",
+                "w-full flex items-center gap-2 px-3 py-2 text-left transition-all border-b border-border last:border-b-0",
                 isFrozen && "opacity-60 cursor-not-allowed",
                 !entry && isWe && "bg-[hsl(var(--weekend))]",
                 !entry && !isWe && "hover:bg-muted/50 active:bg-muted",

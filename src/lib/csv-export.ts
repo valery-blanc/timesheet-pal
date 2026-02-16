@@ -55,6 +55,23 @@ export function exportToCSV(
 
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+
+  // Use Web Share API if available (mobile), otherwise fallback to download
+  const file = new File([blob], filename, { type: "text/csv" });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    navigator.share({
+      files: [file],
+      title: "Timesheet Export",
+    }).catch(() => {
+      // Fallback to download if share is cancelled
+      downloadFile(blob, filename);
+    });
+  } else {
+    downloadFile(blob, filename);
+  }
+}
+
+function downloadFile(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
