@@ -1,0 +1,119 @@
+import { useState } from "react";
+import { format, startOfWeek, addDays, isWeekend } from "date-fns";
+import { fr } from "date-fns/locale";
+import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { useTimesheetStore } from "@/hooks/useTimesheetStore";
+import { BottomNav } from "@/components/navigation/BottomNav";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const HOURS = Array.from({ length: 11 }, (_, i) => i + 8);
+
+export default function WeekViewPage() {
+  const store = useTimesheetStore();
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const clientMap = new Map(store.clients.map(c => [c.id, c]));
+
+  const prevWeek = () => setWeekStart(d => addDays(d, -7));
+  const nextWeek = () => setWeekStart(d => addDays(d, 7));
+  const thisWeek = () => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-4xl mx-auto px-2 py-2 flex flex-col gap-2">
+        <div className="flex items-center justify-between safe-top">
+          <Button variant="ghost" size="icon" onClick={prevWeek} className="h-9 w-9">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <button onClick={thisWeek} className="text-center">
+            <span className="text-sm font-bold">
+              Semaine du {format(weekStart, "d MMM", { locale: fr })}
+            </span>
+          </button>
+          <Button variant="ghost" size="icon" onClick={nextWeek} className="h-9 w-9">
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-xs">
+            <thead>
+              <tr>
+                <th className="sticky left-0 bg-card z-10 px-1.5 py-2 text-muted-foreground font-medium w-12">H</th>
+                {days.map(day => {
+                  const dateStr = format(day, "yyyy-MM-dd");
+                  const frozen = store.isDayFrozen(dateStr);
+                  const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
+                  return (
+                    <th key={dateStr} className={cn(
+                      "px-1 py-2 text-center font-medium min-w-[60px]",
+                      isWeekend(day) && "text-muted-foreground/50",
+                      isToday && "text-primary"
+                    )}>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="capitalize">{format(day, "EEE", { locale: fr })}</span>
+                        <span className={cn("text-[11px]", isToday && "bg-primary text-primary-foreground rounded-full px-1.5 py-0.5")}>
+                          {format(day, "d")}
+                        </span>
+                        {frozen && <Lock className="h-2.5 w-2.5 text-muted-foreground" />}
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {HOURS.map(hour => (
+                <tr key={hour} className="border-t border-border">
+                  <td className="sticky left-0 bg-card z-10 px-1.5 py-1.5 text-muted-foreground font-mono text-[10px]">
+                    {String(hour).padStart(2, "0")}:00
+                  </td>
+                  {days.map(day => {
+                    const dateStr = format(day, "yyyy-MM-dd");
+                    const entry = store.entries.find(e => e.date === dateStr && e.hour === hour);
+                    const client = entry ? clientMap.get(entry.clientId) : null;
+                    return (
+                      <td
+                        key={dateStr}
+                        className={cn(
+                          "px-0.5 py-0.5 text-center",
+                          isWeekend(day) && !entry && "bg-[hsl(var(--weekend))]"
+                        )}
+                      >
+                        {client && (
+                          <div
+                            className="rounded h-5 w-full"
+                            style={{ backgroundColor: `hsl(${client.color} / 0.3)` }}
+                            title={client.name}
+                          />
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Daily totals */}
+        <div className="flex gap-1 overflow-x-auto">
+          {days.map(day => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            const count = store.entries.filter(e => e.date === dateStr).length;
+            return (
+              <div key={dateStr} className="flex-1 min-w-[60px] text-center py-2 rounded-lg bg-card border border-border">
+                <div className="text-lg font-bold">{count}h</div>
+                <div className="text-[10px] text-muted-foreground capitalize">{format(day, "EEE", { locale: fr })}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
