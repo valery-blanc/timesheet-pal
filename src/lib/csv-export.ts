@@ -1,7 +1,9 @@
 import { TimeEntry, Client, Activity } from "@/types/timesheet";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getISOWeek } from "date-fns";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
+import { registerPlugin } from "@capacitor/core";
+
+const FilesystemPlugin: any = registerPlugin("Filesystem");
+const SharePlugin: any = registerPlugin("Share");
 
 export type ExportScope = "day" | "week" | "month";
 
@@ -63,17 +65,17 @@ export async function exportToCSV(
     const cap = (window as any).Capacitor;
     if (cap?.isNativePlatform?.()) {
       console.log("[Export] Native platform detected, writing file:", filename);
-      await Filesystem.writeFile({
+      await FilesystemPlugin.writeFile({
         path: filename,
         data: btoa("\ufeff" + csv),
-        directory: Directory.Cache,
+        directory: "CACHE",
       });
-      const uriResult = await Filesystem.getUri({
+      const uriResult = await FilesystemPlugin.getUri({
         path: filename,
-        directory: Directory.Cache,
+        directory: "CACHE",
       });
       console.log("[Export] URI:", uriResult.uri);
-      await Share.share({
+      await SharePlugin.share({
         title: "Timesheet Export",
         url: uriResult.uri,
       });
