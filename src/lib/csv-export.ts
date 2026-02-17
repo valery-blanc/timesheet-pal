@@ -1,5 +1,7 @@
 import { TimeEntry, Client, Activity } from "@/types/timesheet";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getISOWeek } from "date-fns";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 export type ExportScope = "day" | "week" | "month";
 
@@ -56,41 +58,27 @@ export async function exportToCSV(
 
   console.log("[Export] Starting export, rows:", filtered.length);
 
-  // Native platform: use Capacitor global (no imports needed, plugins are injected at runtime)
+  // Native platform: use imported Capacitor plugins
   try {
     const cap = (window as any).Capacitor;
-    console.log("[Export] Capacitor global:", !!cap);
-    console.log("[Export] isNativePlatform:", cap?.isNativePlatform?.());
-    console.log("[Export] Plugins available:", cap?.Plugins ? Object.keys(cap.Plugins) : "none");
-
     if (cap?.isNativePlatform?.()) {
-      const Filesystem = cap.Plugins?.Filesystem;
-      const Share = cap.Plugins?.Share;
-      console.log("[Export] Filesystem plugin:", !!Filesystem);
-      console.log("[Export] Share plugin:", !!Share);
-
-      if (Filesystem && Share) {
-        console.log("[Export] Writing file:", filename);
-        await Filesystem.writeFile({
-          path: filename,
-          data: btoa("\ufeff" + csv),
-          directory: "CACHE",
-        });
-        console.log("[Export] File written, getting URI...");
-        const uriResult = await Filesystem.getUri({
-          path: filename,
-          directory: "CACHE",
-        });
-        console.log("[Export] URI:", uriResult.uri);
-        await Share.share({
-          title: "Timesheet Export",
-          url: uriResult.uri,
-        });
-        console.log("[Export] Share completed");
-        return;
-      } else {
-        console.warn("[Export] Missing native plugins, falling back to web");
-      }
+      console.log("[Export] Native platform detected, writing file:", filename);
+      await Filesystem.writeFile({
+        path: filename,
+        data: btoa("\ufeff" + csv),
+        directory: Directory.Cache,
+      });
+      const uriResult = await Filesystem.getUri({
+        path: filename,
+        directory: Directory.Cache,
+      });
+      console.log("[Export] URI:", uriResult.uri);
+      await Share.share({
+        title: "Timesheet Export",
+        url: uriResult.uri,
+      });
+      console.log("[Export] Share completed");
+      return;
     }
   } catch (err) {
     if ((err as any)?.message?.includes("cancel")) return;
