@@ -1,6 +1,7 @@
 import { Activity } from "@/types/timesheet";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
+import { Link } from "react-router-dom";
 
 interface ActivityChipsProps {
   activities: Activity[];
@@ -21,7 +22,11 @@ export function ActivityChips({ activities, selectedId, onSelect }: ActivityChip
         <div className="flex gap-1.5 whitespace-nowrap pb-1">
           {activeActivities.length === 0 && (
             <p className="text-xs text-muted-foreground py-2">
-              {t("activity.none")}
+              {t("activity.none").split("{link}").map((part, i) => {
+                if (i === 0) return part;
+                const [linkText, rest] = part.split("{/link}");
+                return <span key={i}><Link to="/settings?tab=activities" className="underline text-primary font-medium">{linkText}</Link>{rest}</span>;
+              })}
             </p>
           )}
           {activeActivities.map(activity => (
