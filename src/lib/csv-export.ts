@@ -82,9 +82,14 @@ export async function exportToCSV(
       console.log("[Export] Share completed");
       return;
     }
-  } catch (err) {
-    if ((err as any)?.message?.includes("cancel")) return;
-    console.error("[Export] Native share failed:", err);
+  } catch (err: any) {
+    if (err?.message?.includes("cancel")) return;
+    console.error("[Export] Native share failed:", JSON.stringify({
+      message: err?.message,
+      name: err?.name,
+      code: err?.code,
+      stack: err?.stack,
+    }));
   }
 
   // Web: try Web Share API with file
