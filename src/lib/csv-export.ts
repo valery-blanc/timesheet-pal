@@ -54,26 +54,28 @@ export async function exportToCSV(
 
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
 
-  // Native platform: use dynamic imports for Capacitor plugins
+  // Native platform: use Capacitor global (no imports needed, plugins are injected at runtime)
   try {
-    const { Capacitor } = await import("@capacitor/core");
-    if (Capacitor.isNativePlatform()) {
-      const { Filesystem, Directory } = await import("@capacitor/filesystem");
-      const { Share } = await import("@capacitor/share");
-      await Filesystem.writeFile({
-        path: filename,
-        data: btoa("\ufeff" + csv),
-        directory: Directory.Cache,
-      });
-      const uriResult = await Filesystem.getUri({
-        path: filename,
-        directory: Directory.Cache,
-      });
-      await Share.share({
-        title: "Timesheet Export",
-        url: uriResult.uri,
-      });
-      return;
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) {
+      const Filesystem = cap.Plugins?.Filesystem;
+      const Share = cap.Plugins?.Share;
+      if (Filesystem && Share) {
+        await Filesystem.writeFile({
+          path: filename,
+          data: btoa("\ufeff" + csv),
+          directory: "CACHE",
+        });
+        const uriResult = await Filesystem.getUri({
+          path: filename,
+          directory: "CACHE",
+        });
+        await Share.share({
+          title: "Timesheet Export",
+          url: uriResult.uri,
+        });
+        return;
+      }
     }
   } catch (err) {
     if ((err as any)?.message?.includes("cancel")) return;
