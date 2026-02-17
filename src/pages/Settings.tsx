@@ -202,7 +202,7 @@ export default function SettingsPage() {
           <TabsContent value="hours" className="flex flex-col gap-4 mt-3">
             <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">
-                Définissez les heures de début et fin de journée. La grille horaire défilera automatiquement vers l'heure de début.
+                Définissez les heures de début et fin de journée. Seules ces heures seront affichées dans la grille du timesheet.
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex-1">

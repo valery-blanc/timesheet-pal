@@ -11,11 +11,12 @@ interface TimeGridProps {
   activities: Activity[];
   isFrozen: boolean;
   onCellTap: (hour: number) => void;
+  startHour?: number;
+  endHour?: number;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
-
-export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellTap }: TimeGridProps) {
+export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellTap, startHour = 0, endHour = 23 }: TimeGridProps) {
+  const HOURS = Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
   const dateStr = format(date, "yyyy-MM-dd");
   const isWe = isWeekend(date);
   const clientMap = new Map(clients.map(c => [c.id, c]));
