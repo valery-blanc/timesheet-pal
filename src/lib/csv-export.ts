@@ -54,48 +54,70 @@ export async function exportToCSV(
 
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
 
+  console.log("[Export] Starting export, rows:", filtered.length);
+
   // Native platform: use Capacitor global (no imports needed, plugins are injected at runtime)
   try {
     const cap = (window as any).Capacitor;
+    console.log("[Export] Capacitor global:", !!cap);
+    console.log("[Export] isNativePlatform:", cap?.isNativePlatform?.());
+    console.log("[Export] Plugins available:", cap?.Plugins ? Object.keys(cap.Plugins) : "none");
+
     if (cap?.isNativePlatform?.()) {
       const Filesystem = cap.Plugins?.Filesystem;
       const Share = cap.Plugins?.Share;
+      console.log("[Export] Filesystem plugin:", !!Filesystem);
+      console.log("[Export] Share plugin:", !!Share);
+
       if (Filesystem && Share) {
+        console.log("[Export] Writing file:", filename);
         await Filesystem.writeFile({
           path: filename,
           data: btoa("\ufeff" + csv),
           directory: "CACHE",
         });
+        console.log("[Export] File written, getting URI...");
         const uriResult = await Filesystem.getUri({
           path: filename,
           directory: "CACHE",
         });
+        console.log("[Export] URI:", uriResult.uri);
         await Share.share({
           title: "Timesheet Export",
           url: uriResult.uri,
         });
+        console.log("[Export] Share completed");
         return;
+      } else {
+        console.warn("[Export] Missing native plugins, falling back to web");
       }
     }
   } catch (err) {
     if ((err as any)?.message?.includes("cancel")) return;
-    console.error("Native share failed, falling back to web:", err);
+    console.error("[Export] Native share failed:", err);
   }
 
   // Web: try Web Share API with file
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const file = new File([blob], filename, { type: "text/csv;charset=utf-8;" });
 
+  console.log("[Export] Trying Web Share API...");
+  console.log("[Export] navigator.share:", !!navigator.share);
+  console.log("[Export] canShare files:", navigator.canShare?.({ files: [file] }));
+
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: "Timesheet Export" });
+      console.log("[Export] Web Share succeeded");
       return;
     } catch (err) {
+      console.error("[Export] Web Share failed:", err);
       if ((err as DOMException)?.name === "AbortError") return;
     }
   }
 
   // Fallback: direct download
+  console.log("[Export] Falling back to direct download");
   downloadFile(blob, filename);
 }
 
