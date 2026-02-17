@@ -67,7 +67,7 @@ export async function exportToCSV(
       console.log("[Export] Native platform detected, writing file:", filename);
       await FilesystemPlugin.writeFile({
         path: filename,
-        data: btoa("\ufeff" + csv),
+        data: btoa(unescape(encodeURIComponent("\ufeff" + csv))),
         directory: "CACHE",
       });
       const uriResult = await FilesystemPlugin.getUri({
