@@ -1,6 +1,8 @@
 import { TimeEntry, Client, Activity } from "@/types/timesheet";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, getISOWeek } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 export type ExportScope = "day" | "week" | "month";
 
@@ -54,11 +56,37 @@ export async function exportToCSV(
   }
 
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
 
+  // Native platform: use Capacitor Filesystem + Share
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // Write CSV to cache directory
+      await Filesystem.writeFile({
+        path: filename,
+        data: btoa("\ufeff" + csv),
+        directory: Directory.Cache,
+      });
+      // Get the file URI
+      const uriResult = await Filesystem.getUri({
+        path: filename,
+        directory: Directory.Cache,
+      });
+      // Share via native share sheet
+      await Share.share({
+        title: "Timesheet Export",
+        url: uriResult.uri,
+      });
+      return;
+    } catch (err) {
+      if ((err as any)?.message?.includes("cancel")) return;
+      console.error("Native share failed:", err);
+    }
+  }
+
+  // Web: try Web Share API with file
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const file = new File([blob], filename, { type: "text/csv;charset=utf-8;" });
-  
-  // Try Web Share API with file
+
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: "Timesheet Export" });
@@ -67,6 +95,7 @@ export async function exportToCSV(
       if ((err as DOMException)?.name === "AbortError") return;
     }
   }
+
   // Fallback: direct download
   downloadFile(blob, filename);
 }
