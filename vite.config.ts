@@ -18,5 +18,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: {},
+  build: {
+    rollupOptions: {
+      external: ["@capacitor/filesystem", "@capacitor/share"],
+    },
+  },
 }));
