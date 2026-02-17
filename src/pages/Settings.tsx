@@ -140,9 +140,6 @@ export default function SettingsPage() {
                 <Plus className="h-4 w-4" /> {t("settings.add")}
               </Button>
             </div>
-            {store.clients.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">{t("client.none")}</p>
-            )}
             {store.clients.map(client => (
               <div key={client.id} className={cn("flex items-center gap-3 px-3 py-3 rounded-lg bg-card border border-border", !client.active && "opacity-50")}>
                 <div className="h-5 w-5 rounded-full shrink-0" style={{ backgroundColor: `hsl(${client.color})` }} />
@@ -167,9 +164,6 @@ export default function SettingsPage() {
                 <Plus className="h-4 w-4" /> {t("settings.add")}
               </Button>
             </div>
-            {store.activities.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">{t("activity.none")}</p>
-            )}
             {store.activities.map((activity, idx) => (
               <div key={activity.id} className={cn("flex items-center gap-2 px-3 py-3 rounded-lg bg-card border border-border", !activity.active && "opacity-50")}>
                 <div className="flex flex-col gap-0.5 shrink-0">
