@@ -1,6 +1,7 @@
 import { Client } from "@/types/timesheet";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
+import { Link } from "react-router-dom";
 
 interface ClientSelectorProps {
   clients: Client[];
@@ -21,7 +22,11 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
         <div className="flex flex-col gap-1">
           {activeClients.length === 0 && (
             <p className="text-xs text-muted-foreground py-3 text-center">
-              {t("client.none")}
+              {t("client.none").split("{link}").map((part, i) => {
+                if (i === 0) return part;
+                const [linkText, rest] = part.split("{/link}");
+                return <span key={i}><Link to="/settings?tab=clients" className="underline text-primary font-medium">{linkText}</Link>{rest}</span>;
+              })}
             </p>
           )}
           {activeClients.map(client => (
