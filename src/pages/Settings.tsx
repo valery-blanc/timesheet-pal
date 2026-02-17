@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation, LANGUAGES } from "@/lib/i18n";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -22,15 +23,14 @@ import {
 export default function SettingsPage() {
   const store = useTimesheetStore();
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useTranslation();
   const [workHours, setWorkHours] = useWorkHours();
 
-  // Client state
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const [clientDeleteConfirm, setClientDeleteConfirm] = useState<string | null>(null);
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [clientForm, setClientForm] = useState({ name: "", color: CLIENT_COLORS[0], notes: "", active: true });
 
-  // Activity state
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [activityDeleteConfirm, setActivityDeleteConfirm] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -52,23 +52,23 @@ export default function SettingsPage() {
     setClientDialogOpen(true);
   };
   const handleSaveClient = () => {
-    if (!clientForm.name.trim()) { toast.error("Nom requis"); return; }
+    if (!clientForm.name.trim()) { toast.error(t("toast.name_required")); return; }
     const dup = store.clients.find(c => c.name.toLowerCase() === clientForm.name.trim().toLowerCase() && c.id !== editingClientId);
-    if (dup) { toast.error("Ce nom existe déjà"); return; }
+    if (dup) { toast.error(t("toast.name_exists")); return; }
     if (editingClientId) {
       store.updateClient(editingClientId, { name: clientForm.name.trim(), color: clientForm.color, notes: clientForm.notes, active: clientForm.active });
-      toast.success("Client mis à jour");
+      toast.success(t("toast.client_updated"));
     } else {
       const c = store.addClient(clientForm.name.trim(), clientForm.notes);
       store.updateClient(c.id, { color: clientForm.color, active: clientForm.active });
-      toast.success("Client ajouté");
+      toast.success(t("toast.client_added"));
     }
     setClientDialogOpen(false);
   };
   const handleDeleteClient = (id: string) => {
     const ok = store.deleteClient(id);
-    if (!ok) toast.error("Impossible: des entrées existent pour ce client");
-    else toast.success("Client supprimé");
+    if (!ok) toast.error(t("toast.client_delete_fail"));
+    else toast.success(t("toast.client_deleted"));
     setClientDeleteConfirm(null);
   };
 
@@ -88,22 +88,22 @@ export default function SettingsPage() {
     setActivityDialogOpen(true);
   };
   const handleSaveActivity = () => {
-    if (!activityForm.label.trim()) { toast.error("Libellé requis"); return; }
-    if (!activityForm.shortCode.trim() || activityForm.shortCode.trim().length > 3) { toast.error("Code court: 1-3 caractères"); return; }
+    if (!activityForm.label.trim()) { toast.error(t("toast.label_required")); return; }
+    if (!activityForm.shortCode.trim() || activityForm.shortCode.trim().length > 3) { toast.error(t("toast.short_code_error")); return; }
     if (editingActivityId) {
       store.updateActivity(editingActivityId, { label: activityForm.label.trim(), shortCode: activityForm.shortCode.trim().toUpperCase(), color: activityForm.color, active: activityForm.active });
-      toast.success("Activité mise à jour");
+      toast.success(t("toast.activity_updated"));
     } else {
       const a = store.addActivity(activityForm.label.trim(), activityForm.shortCode.trim().toUpperCase());
       store.updateActivity(a.id, { color: activityForm.color, active: activityForm.active });
-      toast.success("Activité ajoutée");
+      toast.success(t("toast.activity_added"));
     }
     setActivityDialogOpen(false);
   };
   const handleDeleteActivity = (id: string) => {
     const ok = store.deleteActivity(id);
-    if (!ok) toast.error("Impossible: des entrées existent pour cette activité");
-    else toast.success("Activité supprimée");
+    if (!ok) toast.error(t("toast.activity_delete_fail"));
+    else toast.success(t("toast.activity_deleted"));
     setActivityDeleteConfirm(null);
   };
   const moveActivity = (id: string, direction: -1 | 1) => {
@@ -122,25 +122,26 @@ export default function SettingsPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-9 w-9">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">Paramètres</h1>
+          <h1 className="text-lg font-bold">{t("settings.title")}</h1>
         </div>
 
         <Tabs defaultValue="clients">
           <TabsList className="w-full">
-            <TabsTrigger value="clients" className="flex-1">Clients</TabsTrigger>
-            <TabsTrigger value="activities" className="flex-1">Activités</TabsTrigger>
-            <TabsTrigger value="hours" className="flex-1">Horaires</TabsTrigger>
+            <TabsTrigger value="clients" className="flex-1">{t("settings.clients")}</TabsTrigger>
+            <TabsTrigger value="activities" className="flex-1">{t("settings.activities")}</TabsTrigger>
+            <TabsTrigger value="hours" className="flex-1">{t("settings.hours")}</TabsTrigger>
+            <TabsTrigger value="language" className="flex-1">{t("settings.language")}</TabsTrigger>
           </TabsList>
 
           {/* CLIENTS TAB */}
           <TabsContent value="clients" className="flex flex-col gap-2 mt-3">
             <div className="flex justify-end">
               <Button size="sm" onClick={openNewClient} className="gap-1">
-                <Plus className="h-4 w-4" /> Ajouter
+                <Plus className="h-4 w-4" /> {t("settings.add")}
               </Button>
             </div>
             {store.clients.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">Aucun client.</p>
+              <p className="text-center text-muted-foreground py-8 text-sm">{t("client.none")}</p>
             )}
             {store.clients.map(client => (
               <div key={client.id} className={cn("flex items-center gap-3 px-3 py-3 rounded-lg bg-card border border-border", !client.active && "opacity-50")}>
@@ -163,11 +164,11 @@ export default function SettingsPage() {
           <TabsContent value="activities" className="flex flex-col gap-2 mt-3">
             <div className="flex justify-end">
               <Button size="sm" onClick={openNewActivity} className="gap-1">
-                <Plus className="h-4 w-4" /> Ajouter
+                <Plus className="h-4 w-4" /> {t("settings.add")}
               </Button>
             </div>
             {store.activities.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 text-sm">Aucune activité.</p>
+              <p className="text-center text-muted-foreground py-8 text-sm">{t("activity.none")}</p>
             )}
             {store.activities.map((activity, idx) => (
               <div key={activity.id} className={cn("flex items-center gap-2 px-3 py-3 rounded-lg bg-card border border-border", !activity.active && "opacity-50")}>
@@ -201,36 +202,50 @@ export default function SettingsPage() {
           {/* WORK HOURS TAB */}
           <TabsContent value="hours" className="flex flex-col gap-4 mt-3">
             <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-4">
-              <p className="text-sm text-muted-foreground">
-                Définissez les heures de début et fin de journée. Seules ces heures seront affichées dans la grille du timesheet.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("settings.hours_desc")}</p>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <Label>Début de journée</Label>
+                  <Label>{t("settings.day_start")}</Label>
                   <Input
-                    type="number"
-                    min={0}
-                    max={23}
-                    value={workHours.start}
+                    type="number" min={0} max={23} value={workHours.start}
                     onChange={e => setWorkHours({ ...workHours, start: Math.min(23, Math.max(0, parseInt(e.target.value) || 0)) })}
                     className="mt-1"
                   />
                 </div>
                 <div className="flex-1">
-                  <Label>Fin de journée</Label>
+                  <Label>{t("settings.day_end")}</Label>
                   <Input
-                    type="number"
-                    min={0}
-                    max={23}
-                    value={workHours.end}
+                    type="number" min={0} max={23} value={workHours.end}
                     onChange={e => setWorkHours({ ...workHours, end: Math.min(23, Math.max(0, parseInt(e.target.value) || 0)) })}
                     className="mt-1"
                   />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Plage actuelle : {String(workHours.start).padStart(2, "0")}:00 – {String(workHours.end).padStart(2, "0")}:00
+                {t("settings.current_range")} : {String(workHours.start).padStart(2, "0")}:00 – {String(workHours.end).padStart(2, "0")}:00
               </p>
+            </div>
+          </TabsContent>
+
+          {/* LANGUAGE TAB */}
+          <TabsContent value="language" className="flex flex-col gap-2 mt-3">
+            <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-2">
+              {LANGUAGES.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all",
+                    language === lang.code
+                      ? "bg-primary/10 ring-2 ring-primary/30"
+                      : "hover:bg-muted/50"
+                  )}
+                >
+                  <span className={cn("text-sm font-medium", language === lang.code ? "text-primary" : "text-foreground")}>
+                    {lang.label}
+                  </span>
+                </button>
+              ))}
             </div>
           </TabsContent>
         </Tabs>
@@ -242,15 +257,15 @@ export default function SettingsPage() {
       <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editingClientId ? "Modifier le client" : "Nouveau client"}</DialogTitle>
+            <DialogTitle>{editingClientId ? t("settings.edit_client") : t("settings.new_client")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div>
-              <Label>Nom</Label>
-              <Input value={clientForm.name} onChange={e => setClientForm(f => ({ ...f, name: e.target.value }))} placeholder="Nom du client" />
+              <Label>{t("settings.name")}</Label>
+              <Input value={clientForm.name} onChange={e => setClientForm(f => ({ ...f, name: e.target.value }))} placeholder={t("settings.client_name_placeholder")} />
             </div>
             <div>
-              <Label>Couleur</Label>
+              <Label>{t("settings.color")}</Label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {CLIENT_COLORS.map(color => (
                   <button key={color} onClick={() => setClientForm(f => ({ ...f, color }))}
@@ -260,16 +275,16 @@ export default function SettingsPage() {
               </div>
             </div>
             <div>
-              <Label>Notes</Label>
-              <Textarea value={clientForm.notes} onChange={e => setClientForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notes optionnelles" rows={2} />
+              <Label>{t("settings.notes")}</Label>
+              <Textarea value={clientForm.notes} onChange={e => setClientForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("settings.notes_placeholder")} rows={2} />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Actif</Label>
+              <Label>{t("settings.active")}</Label>
               <Switch checked={clientForm.active} onCheckedChange={v => setClientForm(f => ({ ...f, active: v }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveClient} className="w-full">Enregistrer</Button>
+            <Button onClick={handleSaveClient} className="w-full">{t("settings.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -278,19 +293,19 @@ export default function SettingsPage() {
       <Dialog open={activityDialogOpen} onOpenChange={setActivityDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editingActivityId ? "Modifier l'activité" : "Nouvelle activité"}</DialogTitle>
+            <DialogTitle>{editingActivityId ? t("settings.edit_activity") : t("settings.new_activity")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div>
-              <Label>Libellé</Label>
-              <Input value={activityForm.label} onChange={e => setActivityForm(f => ({ ...f, label: e.target.value }))} placeholder="Ex: Développement" />
+              <Label>{t("settings.label")}</Label>
+              <Input value={activityForm.label} onChange={e => setActivityForm(f => ({ ...f, label: e.target.value }))} placeholder={t("settings.activity_label_placeholder")} />
             </div>
             <div>
-              <Label>Code court (1-3 car.)</Label>
+              <Label>{t("settings.short_code")}</Label>
               <Input value={activityForm.shortCode} onChange={e => setActivityForm(f => ({ ...f, shortCode: e.target.value.slice(0, 3) }))} placeholder="DEV" maxLength={3} className="uppercase" />
             </div>
             <div>
-              <Label>Couleur</Label>
+              <Label>{t("settings.color")}</Label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {ACTIVITY_COLORS.map(color => (
                   <button key={color} onClick={() => setActivityForm(f => ({ ...f, color }))}
@@ -300,12 +315,12 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Label>Active</Label>
+              <Label>{t("settings.active")}</Label>
               <Switch checked={activityForm.active} onCheckedChange={v => setActivityForm(f => ({ ...f, active: v }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveActivity} className="w-full">Enregistrer</Button>
+            <Button onClick={handleSaveActivity} className="w-full">{t("settings.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -314,12 +329,12 @@ export default function SettingsPage() {
       <AlertDialog open={!!clientDeleteConfirm} onOpenChange={() => setClientDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce client ?</AlertDialogTitle>
-            <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+            <AlertDialogTitle>{t("settings.delete_client")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("settings.delete_irreversible")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => clientDeleteConfirm && handleDeleteClient(clientDeleteConfirm)}>Supprimer</AlertDialogAction>
+            <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => clientDeleteConfirm && handleDeleteClient(clientDeleteConfirm)}>{t("settings.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -327,12 +342,12 @@ export default function SettingsPage() {
       <AlertDialog open={!!activityDeleteConfirm} onOpenChange={() => setActivityDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette activité ?</AlertDialogTitle>
-            <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+            <AlertDialogTitle>{t("settings.delete_activity")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("settings.delete_irreversible")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => activityDeleteConfirm && handleDeleteActivity(activityDeleteConfirm)}>Supprimer</AlertDialogAction>
+            <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => activityDeleteConfirm && handleDeleteActivity(activityDeleteConfirm)}>{t("settings.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

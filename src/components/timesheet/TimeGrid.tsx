@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react";
 import { format, isWeekend } from "date-fns";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 interface TimeGridProps {
   date: Date;
@@ -16,6 +17,7 @@ interface TimeGridProps {
 }
 
 export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellTap, startHour = 0, endHour = 23 }: TimeGridProps) {
+  const { t } = useTranslation();
   const HOURS = Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
   const dateStr = format(date, "yyyy-MM-dd");
   const isWe = isWeekend(date);
@@ -24,7 +26,6 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasScrolled = useRef(false);
 
-  // Auto-scroll to 8h on first mount
   useEffect(() => {
     if (scrollRef.current && !hasScrolled.current) {
       const row = scrollRef.current.querySelector('[data-hour="8"]');
@@ -40,7 +41,7 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
       {isFrozen && (
         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-[hsl(var(--frozen))] text-xs text-muted-foreground mb-1">
           <Lock className="h-3 w-3" />
-          <span>Journée verrouillée</span>
+          <span>{t("timegrid.frozen")}</span>
         </div>
       )}
       <div className="rounded-xl overflow-hidden border border-border bg-card">

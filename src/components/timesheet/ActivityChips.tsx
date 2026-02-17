@@ -1,7 +1,6 @@
 import { Activity } from "@/types/timesheet";
 import { cn } from "@/lib/utils";
-import { Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/lib/i18n";
 
 interface ActivityChipsProps {
   activities: Activity[];
@@ -10,26 +9,19 @@ interface ActivityChipsProps {
 }
 
 export function ActivityChips({ activities, selectedId, onSelect }: ActivityChipsProps) {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const activeActivities = activities.filter(a => a.active);
 
   return (
     <div className="flex flex-col gap-1 h-full">
-      <div className="flex items-center justify-between px-1 shrink-0">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Activité</span>
-        <button
-          onClick={() => navigate("/activities")}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Settings className="h-3 w-3" />
-          Gérer
-        </button>
+      <div className="flex items-center px-1 shrink-0">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("activity.title")}</span>
       </div>
       <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
         <div className="flex gap-1.5 whitespace-nowrap pb-1">
           {activeActivities.length === 0 && (
             <p className="text-xs text-muted-foreground py-2">
-              Aucune activité. <button onClick={() => navigate("/activities")} className="underline text-primary">Ajouter</button>
+              {t("activity.none")}
             </p>
           )}
           {activeActivities.map(activity => (
