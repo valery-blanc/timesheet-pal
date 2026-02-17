@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { useTimesheetStore } from "@/hooks/useTimesheetStore";
+import { useWorkHours } from "@/hooks/useWorkHours";
 import { TopBar } from "@/components/timesheet/TopBar";
 import { ClientSelector } from "@/components/timesheet/ClientSelector";
 import { ActivityChips } from "@/components/timesheet/ActivityChips";
@@ -14,6 +15,7 @@ import {
 
 const Index = () => {
   const store = useTimesheetStore();
+  const [workHours] = useWorkHours();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
@@ -112,6 +114,8 @@ const Index = () => {
             activities={store.activities}
             isFrozen={isFrozen}
             onCellTap={handleCellTap}
+            startHour={workHours.start}
+            endHour={workHours.end}
           />
         </div>
       </div>
