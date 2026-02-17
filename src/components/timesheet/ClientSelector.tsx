@@ -1,7 +1,6 @@
 import { Client } from "@/types/timesheet";
 import { cn } from "@/lib/utils";
-import { Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/lib/i18n";
 
 interface ClientSelectorProps {
   clients: Client[];
@@ -10,26 +9,19 @@ interface ClientSelectorProps {
 }
 
 export function ClientSelector({ clients, selectedId, onSelect }: ClientSelectorProps) {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const activeClients = clients.filter(c => c.active);
 
   return (
     <div className="flex flex-col gap-1 h-full">
-      <div className="flex items-center justify-between px-1 shrink-0">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Client</span>
-        <button
-          onClick={() => navigate("/clients")}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Settings className="h-3 w-3" />
-          Gérer
-        </button>
+      <div className="flex items-center px-1 shrink-0">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("client.title")}</span>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-1">
           {activeClients.length === 0 && (
             <p className="text-xs text-muted-foreground py-3 text-center">
-              Aucun client. <button onClick={() => navigate("/clients")} className="underline text-primary">Ajouter un client</button>
+              {t("client.none")}
             </p>
           )}
           {activeClients.map(client => (

@@ -1,8 +1,8 @@
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface TopBarProps {
   date: Date;
@@ -15,6 +15,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ date, isFrozen, onPrevDay, onNextDay, onToday, onToggleFreeze }: TopBarProps) {
+  const { t, dateLocale } = useTranslation();
   const isToday = format(new Date(), "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
 
   return (
@@ -25,10 +26,10 @@ export function TopBar({ date, isFrozen, onPrevDay, onNextDay, onToday, onToggle
         </Button>
         <button onClick={onToday} className="flex flex-col items-center px-1.5">
           <span className="text-sm font-bold leading-tight capitalize">
-            {format(date, "EEE d", { locale: fr })}
+            {format(date, "EEE d", { locale: dateLocale })}
           </span>
           <span className="text-[10px] text-muted-foreground">
-            {format(date, "MMMM yyyy", { locale: fr })}
+            {format(date, "MMMM yyyy", { locale: dateLocale })}
           </span>
         </button>
         <Button variant="ghost" size="icon" onClick={onNextDay} className="h-8 w-8">
@@ -36,7 +37,7 @@ export function TopBar({ date, isFrozen, onPrevDay, onNextDay, onToday, onToggle
         </Button>
         {!isToday && (
           <Button variant="outline" size="sm" onClick={onToday} className="text-[10px] h-6 ml-0.5 px-2">
-            Auj.
+            {t("topbar.today")}
           </Button>
         )}
       </div>

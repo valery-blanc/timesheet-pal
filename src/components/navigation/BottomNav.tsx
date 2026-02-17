@@ -4,18 +4,22 @@ import { Clock, CalendarDays, Settings, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportDialog } from "@/components/timesheet/ExportDialog";
 import { useTimesheetStore } from "@/hooks/useTimesheetStore";
-
-const tabs = [
-  { path: "/", label: "Timesheet", icon: Clock },
-  { path: "/week", label: "Semaine", icon: CalendarDays },
-  { path: "/settings", label: "Paramètres", icon: Settings },
-];
+import { useCurrentViewDate } from "@/hooks/useCurrentViewDate";
+import { useTranslation } from "@/lib/i18n";
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const store = useTimesheetStore();
+  const { t } = useTranslation();
   const [exportOpen, setExportOpen] = useState(false);
+  const [currentViewDate] = useCurrentViewDate();
+
+  const tabs = [
+    { path: "/", label: t("nav.timesheet"), icon: Clock },
+    { path: "/week", label: t("nav.week"), icon: CalendarDays },
+    { path: "/settings", label: t("nav.settings"), icon: Settings },
+  ];
 
   return (
     <>
@@ -42,7 +46,7 @@ export function BottomNav() {
             className="flex-1 flex flex-col items-center gap-0.5 py-2 pt-2.5 transition-colors touch-target text-muted-foreground"
           >
             <Share2 className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Envoyer</span>
+            <span className="text-[10px] font-medium">{t("nav.send")}</span>
           </button>
         </div>
       </nav>
@@ -50,7 +54,7 @@ export function BottomNav() {
       <ExportDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
-        date={new Date()}
+        date={new Date(currentViewDate + "T12:00:00")}
         entries={store.entries}
         clients={store.clients}
         activities={store.activities}
