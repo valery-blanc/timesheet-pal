@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { format, addDays, subDays } from "date-fns";
 import { useTimesheetStore } from "@/hooks/useTimesheetStore";
 import { useWorkHours } from "@/hooks/useWorkHours";
@@ -20,8 +21,8 @@ const Index = () => {
   const { t } = useTranslation();
   const [workHours] = useWorkHours();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useLocalStorage<string | null>("ts-selected-client", null);
+  const [selectedActivityId, setSelectedActivityId] = useLocalStorage<string | null>("ts-selected-activity", null);
   const [unfreezeConfirm, setUnfreezeConfirm] = useState(false);
   const [, setCurrentViewDate] = useCurrentViewDate();
 

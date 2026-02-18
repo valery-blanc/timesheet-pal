@@ -9,7 +9,14 @@ import { useNavigate } from "react-router-dom";
 import { useCurrentViewDate } from "@/hooks/useCurrentViewDate";
 import { useTranslation } from "@/lib/i18n";
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+// Generate half-hour slots: 0, 0.5, 1, 1.5, ... 23, 23.5
+const SLOTS = Array.from({ length: 48 }, (_, i) => i * 0.5);
+
+function formatSlot(slot: number): string {
+  const h = Math.floor(slot);
+  const m = slot % 1 === 0.5 ? "30" : "00";
+  return `${String(h).padStart(2, "0")}:${m}`;
+}
 
 export default function WeekViewPage() {
   const store = useTimesheetStore();
@@ -24,7 +31,7 @@ export default function WeekViewPage() {
 
   useEffect(() => {
     if (tableRef.current) {
-      const row = tableRef.current.querySelector('[data-hour="8"]');
+      const row = tableRef.current.querySelector('[data-slot="8"]');
       if (row) row.scrollIntoView({ block: "start" });
     }
   }, []);
@@ -37,7 +44,6 @@ export default function WeekViewPage() {
     const dateStr = format(day, "yyyy-MM-dd");
     setCurrentViewDate(dateStr);
     navigate("/");
-    // Dispatch event so Index picks up the date
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent("navigate-to-date", { detail: dateStr }));
     }, 50);
@@ -90,14 +96,14 @@ export default function WeekViewPage() {
               </tr>
             </thead>
             <tbody>
-              {HOURS.map(hour => (
-                <tr key={hour} data-hour={hour} className="border-t border-border">
-                  <td className="sticky left-0 bg-card z-10 px-1.5 py-1.5 text-muted-foreground font-mono text-[10px]">
-                    {String(hour).padStart(2, "0")}:00
+              {SLOTS.map(slot => (
+                <tr key={slot} data-slot={slot} className={cn("border-t border-border", slot % 1 === 0.5 && "border-t-border/30")}>
+                  <td className="sticky left-0 bg-card z-10 px-1.5 py-1 text-muted-foreground font-mono text-[10px]">
+                    {formatSlot(slot)}
                   </td>
                   {days.map(day => {
                     const dateStr = format(day, "yyyy-MM-dd");
-                    const entry = store.entries.find(e => e.date === dateStr && e.hour === hour);
+                    const entry = store.entries.find(e => e.date === dateStr && e.hour === slot);
                     const client = entry ? clientMap.get(entry.clientId) : null;
                     return (
                       <td
@@ -109,11 +115,11 @@ export default function WeekViewPage() {
                       >
                         {client && (
                           <div
-                            className="rounded h-5 w-full flex items-center justify-center px-0.5"
+                            className="rounded h-4 w-full flex items-center justify-center px-0.5"
                             style={{ backgroundColor: `hsl(${client.color} / 0.3)` }}
                             title={client.name}
                           >
-                            <span className="text-[8px] font-medium truncate leading-none" style={{ color: `hsl(${client.color})` }}>
+                            <span className="text-[7px] font-medium truncate leading-none" style={{ color: `hsl(${client.color})` }}>
                               {client.name}
                             </span>
                           </div>
@@ -131,9 +137,10 @@ export default function WeekViewPage() {
           {days.map(day => {
             const dateStr = format(day, "yyyy-MM-dd");
             const count = store.entries.filter(e => e.date === dateStr).length;
+            const hours = count * 0.5;
             return (
               <div key={dateStr} className="flex-1 min-w-[60px] text-center py-2 rounded-lg bg-card border border-border">
-                <div className="text-lg font-bold">{count}h</div>
+                <div className="text-lg font-bold">{hours % 1 === 0 ? `${hours}h` : `${hours}h`}</div>
                 <div className="text-[10px] text-muted-foreground capitalize">{format(day, "EEE", { locale: dateLocale })}</div>
               </div>
             );

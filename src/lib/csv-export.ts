@@ -45,6 +45,12 @@ export async function exportToCSV(
   const headerRow = headers || ["Date", "Client", "Activité", "Heure début", "Heure fin", "Durée (h)"];
   const rows = [headerRow];
 
+  const formatSlot = (h: number) => {
+    const hh = Math.floor(h);
+    const mm = h % 1 === 0.5 ? "30" : "00";
+    return `${String(hh).padStart(2, "0")}:${mm}`;
+  };
+
   for (const entry of filtered) {
     const client = clientMap.get(entry.clientId);
     const activity = activityMap.get(entry.activityId);
@@ -52,9 +58,9 @@ export async function exportToCSV(
       entry.date,
       client?.name || "?",
       activity?.label || "?",
-      `${String(entry.hour).padStart(2, "0")}:00`,
-      `${String(entry.hour + 1).padStart(2, "0")}:00`,
-      "1",
+      formatSlot(entry.hour),
+      formatSlot(entry.hour + 0.5),
+      "0.5",
     ]);
   }
 

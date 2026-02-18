@@ -35,6 +35,7 @@ export default function SettingsPage() {
   const [activityDeleteConfirm, setActivityDeleteConfirm] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [activityForm, setActivityForm] = useState({ label: "", shortCode: "", color: ACTIVITY_COLORS[0], active: true });
+  const [workHoursInput, setWorkHoursInput] = useState({ start: String(workHours.start), end: String(workHours.end) });
 
   // --- Client handlers ---
   const openNewClient = () => {
@@ -193,7 +194,6 @@ export default function SettingsPage() {
             ))}
           </TabsContent>
 
-          {/* WORK HOURS TAB */}
           <TabsContent value="hours" className="flex flex-col gap-4 mt-3">
             <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">{t("settings.hours_desc")}</p>
@@ -201,21 +201,37 @@ export default function SettingsPage() {
                 <div className="flex-1">
                   <Label>{t("settings.day_start")}</Label>
                   <Input
-                    type="number" min={0} max={23} value={workHours.start}
-                    onChange={e => setWorkHours({ ...workHours, start: Math.min(23, Math.max(0, parseInt(e.target.value) || 0)) })}
+                    type="number" min={0} max={23}
+                    value={workHoursInput.start}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      setWorkHoursInput(prev => ({ ...prev, start: raw }));
+                      if (raw !== "") {
+                        const val = Math.min(23, Math.max(0, parseInt(raw) || 0));
+                        setWorkHours({ ...workHours, start: val });
+                      }
+                    }}
                     className="mt-1"
                   />
                 </div>
                 <div className="flex-1">
                   <Label>{t("settings.day_end")}</Label>
                   <Input
-                    type="number" min={0} max={23} value={workHours.end}
-                    onChange={e => setWorkHours({ ...workHours, end: Math.min(23, Math.max(0, parseInt(e.target.value) || 0)) })}
+                    type="number" min={0} max={23}
+                    value={workHoursInput.end}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      setWorkHoursInput(prev => ({ ...prev, end: raw }));
+                      if (raw !== "") {
+                        const val = Math.min(23, Math.max(0, parseInt(raw) || 0));
+                        setWorkHours({ ...workHours, end: val });
+                      }
+                    }}
                     className="mt-1"
                   />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-medium text-foreground">
                 {t("settings.current_range")} : {String(workHours.start).padStart(2, "0")}:00 – {String(workHours.end).padStart(2, "0")}:00
               </p>
             </div>
