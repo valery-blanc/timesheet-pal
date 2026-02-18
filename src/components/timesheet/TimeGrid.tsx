@@ -16,6 +16,12 @@ interface TimeGridProps {
   endHour?: number;
 }
 
+function formatSlot(hour: number): string {
+  const h = Math.floor(hour);
+  const m = hour % 1 === 0.5 ? "30" : "00";
+  return `${String(h).padStart(2, "0")}:${m}`;
+}
+
 export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellTap, startHour = 0, endHour = 23 }: TimeGridProps) {
   const { t } = useTranslation();
   const HOURS = Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
@@ -36,6 +42,28 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
     }
   }, []);
 
+  const getEntry = (hour: number) => entries.find(e => e.date === dateStr && e.hour === hour);
+
+  const handleLeftClick = (hour: number) => {
+    // Click left = toggle both halves (full hour)
+    const leftEntry = getEntry(hour);
+    const rightEntry = getEntry(hour + 0.5);
+    if (leftEntry || rightEntry) {
+      // Clear both
+      if (leftEntry) onCellTap(hour);
+      if (rightEntry) onCellTap(hour + 0.5);
+    } else {
+      // Fill both
+      onCellTap(hour);
+      onCellTap(hour + 0.5);
+    }
+  };
+
+  const handleRightClick = (hour: number) => {
+    // Click right = toggle only the :30 slot
+    onCellTap(hour + 0.5);
+  };
+
   return (
     <div className="flex flex-col gap-0.5" ref={scrollRef}>
       {isFrozen && (
@@ -46,55 +74,97 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
       )}
       <div className="rounded-xl overflow-hidden border border-border bg-card">
         {HOURS.map(hour => {
-          const entry = entries.find(e => e.date === dateStr && e.hour === hour);
-          const client = entry ? clientMap.get(entry.clientId) : null;
-          const activity = entry ? activityMap.get(entry.activityId) : null;
+          const leftEntry = getEntry(hour);
+          const rightEntry = getEntry(hour + 0.5);
+          const leftClient = leftEntry ? clientMap.get(leftEntry.clientId) : null;
+          const leftActivity = leftEntry ? activityMap.get(leftEntry.activityId) : null;
+          const rightClient = rightEntry ? clientMap.get(rightEntry.clientId) : null;
+          const rightActivity = rightEntry ? activityMap.get(rightEntry.activityId) : null;
+
+          const sameContent = leftEntry && rightEntry && leftEntry.clientId === rightEntry.clientId && leftEntry.activityId === rightEntry.activityId;
+          const bothEmpty = !leftEntry && !rightEntry;
 
           return (
-            <button
+            <div
               key={hour}
               data-hour={hour}
-              onClick={() => onCellTap(hour)}
-              disabled={isFrozen}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-left transition-all border-b border-border last:border-b-0",
+                "w-full flex items-center border-b border-border last:border-b-0",
                 isFrozen && "opacity-60 cursor-not-allowed",
-                !entry && isWe && "bg-[hsl(var(--weekend))]",
-                !entry && !isWe && "hover:bg-muted/50 active:bg-muted",
               )}
-              style={entry && client ? {
-                backgroundColor: `hsl(${client.color} / 0.12)`,
-                borderLeft: `4px solid hsl(${activity?.color || client.color})`,
-              } : undefined}
             >
+              {/* Hour label */}
               <span className={cn(
-                "text-xs font-mono w-10 shrink-0",
-                entry ? "text-foreground font-medium" : "text-muted-foreground"
+                "text-xs font-mono w-10 shrink-0 px-2 py-2 self-center",
+                (leftEntry || rightEntry) ? "text-foreground font-medium" : "text-muted-foreground"
               )}>
                 {String(hour).padStart(2, "0")}:00
               </span>
 
-              {entry && client && activity ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <div
-                    className="h-3 w-3 rounded-full shrink-0"
-                    style={{ backgroundColor: `hsl(${client.color})` }}
-                  />
-                  <span className="text-sm font-medium truncate">{client.name}</span>
-                  <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    style={{
-                      backgroundColor: `hsl(${activity.color} / 0.15)`,
-                      color: `hsl(${activity.color})`,
-                    }}
-                  >
-                    {activity.shortCode}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-xs text-muted-foreground/50">—</span>
-              )}
-            </button>
+              {/* Left half (:00) */}
+              <button
+                onClick={() => !isFrozen && handleLeftClick(hour)}
+                disabled={isFrozen}
+                className={cn(
+                  "flex-1 flex items-center gap-1.5 px-2 py-2 min-w-0 transition-all border-r border-border/50",
+                  !leftEntry && isWe && "bg-[hsl(var(--weekend))]",
+                  !leftEntry && !isWe && "hover:bg-muted/50 active:bg-muted",
+                )}
+                style={leftEntry && leftClient ? {
+                  backgroundColor: `hsl(${leftClient.color} / 0.12)`,
+                  borderLeft: `3px solid hsl(${leftActivity?.color || leftClient.color})`,
+                } : undefined}
+              >
+                {leftEntry && leftClient && leftActivity ? (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={cn("text-sm font-medium", (!sameContent && rightEntry) ? "truncate" : "")}>{leftClient.name}</span>
+                    <span
+                      className="text-[10px] font-bold px-1 py-0.5 rounded shrink-0"
+                      style={{
+                        backgroundColor: `hsl(${leftActivity.color} / 0.15)`,
+                        color: `hsl(${leftActivity.color})`,
+                      }}
+                    >
+                      {leftActivity.shortCode}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground/50">—</span>
+                )}
+              </button>
+
+              {/* Right half (:30) */}
+              <button
+                onClick={() => !isFrozen && handleRightClick(hour)}
+                disabled={isFrozen}
+                className={cn(
+                  "flex-1 flex items-center gap-1.5 px-2 py-2 min-w-0 transition-all",
+                  !rightEntry && isWe && "bg-[hsl(var(--weekend))]",
+                  !rightEntry && !isWe && "hover:bg-muted/50 active:bg-muted",
+                )}
+                style={rightEntry && rightClient ? {
+                  backgroundColor: `hsl(${rightClient.color} / 0.12)`,
+                  borderLeft: `3px solid hsl(${rightActivity?.color || rightClient.color})`,
+                } : undefined}
+              >
+                {rightEntry && rightClient && rightActivity ? (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={cn("text-sm font-medium", (!sameContent && leftEntry) ? "truncate" : "")}>{rightClient.name}</span>
+                    <span
+                      className="text-[10px] font-bold px-1 py-0.5 rounded shrink-0"
+                      style={{
+                        backgroundColor: `hsl(${rightActivity.color} / 0.15)`,
+                        color: `hsl(${rightActivity.color})`,
+                      }}
+                    >
+                      {rightActivity.shortCode}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground/50">—</span>
+                )}
+              </button>
+            </div>
           );
         })}
       </div>

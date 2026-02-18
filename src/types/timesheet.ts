@@ -20,7 +20,7 @@ export interface Activity {
 
 export interface TimeEntry {
   date: string; // YYYY-MM-DD
-  hour: number; // 8-18
+  hour: number; // 0, 0.5, 1, 1.5, ... 23, 23.5 (half-hour slots)
   clientId: string;
   activityId: string;
 }
