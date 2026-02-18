@@ -27,6 +27,7 @@ export default function WeekViewPage() {
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const clientMap = new Map(store.clients.map(c => [c.id, c]));
+  const activityMap = new Map(store.activities.map(a => [a.id, a]));
   const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,30 +99,41 @@ export default function WeekViewPage() {
             <tbody>
               {SLOTS.map(slot => (
                 <tr key={slot} data-slot={slot} className={cn("border-t border-border", slot % 1 === 0.5 && "border-t-border/30")}>
-                  <td className="sticky left-0 bg-card z-10 px-1.5 py-1 text-muted-foreground font-mono text-[10px]">
+                  <td className="sticky left-0 bg-card z-10 px-1.5 py-0 text-muted-foreground font-mono text-[10px] align-middle">
                     {formatSlot(slot)}
                   </td>
                   {days.map(day => {
                     const dateStr = format(day, "yyyy-MM-dd");
                     const entry = store.entries.find(e => e.date === dateStr && e.hour === slot);
                     const client = entry ? clientMap.get(entry.clientId) : null;
+                    const activity = entry ? activityMap.get(entry.activityId) : null;
                     return (
                       <td
                         key={dateStr}
                         className={cn(
-                          "px-0.5 py-0.5 text-center",
+                          "px-0 py-0 align-middle",
                           isWeekend(day) && !entry && "bg-[hsl(var(--weekend))]"
                         )}
                       >
                         {client && (
                           <div
-                            className="rounded h-4 w-full flex items-center justify-center px-0.5"
-                            style={{ backgroundColor: `hsl(${client.color} / 0.3)` }}
-                            title={client.name}
+                            className="w-full h-full flex items-center gap-0.5 px-1 py-1"
+                            style={{ backgroundColor: `hsl(${client.color} / 0.15)` }}
                           >
-                            <span className="text-[7px] font-medium truncate leading-none" style={{ color: `hsl(${client.color})` }}>
+                            <span className="text-[10px] font-medium leading-tight break-words min-w-0" style={{ color: `hsl(${client.color})` }}>
                               {client.name}
                             </span>
+                            {activity && (
+                              <span
+                                className="text-[8px] font-bold px-0.5 rounded shrink-0"
+                                style={{
+                                  backgroundColor: `hsl(${activity.color} / 0.15)`,
+                                  color: `hsl(${activity.color})`,
+                                }}
+                              >
+                                {activity.shortCode}
+                              </span>
+                            )}
                           </div>
                         )}
                       </td>
