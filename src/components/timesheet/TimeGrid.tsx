@@ -102,26 +102,35 @@ export function TimeGrid({ date, entries, clients, activities, isFrozen, onCellT
               </span>
 
               {sameContent ? (
-                /* Merged full row: same client+activity on both halves */
-                <button
-                  onClick={() => !isFrozen && handleLeftClick(hour)}
-                  disabled={isFrozen}
-                  className="flex-[2] flex items-center gap-1.5 px-2 py-2 min-w-0 transition-all"
+                /* Merged visual row: same client+activity on both halves, but two click zones */
+                <div
+                  className="flex-[2] flex items-center min-w-0 transition-all"
                   style={{
                     backgroundColor: `hsl(${leftClient!.color} / 0.12)`,
                   }}
                 >
-                  <span className="text-sm font-medium">{leftClient!.name}</span>
-                  <span
-                    className="text-[10px] font-bold px-1 py-0.5 rounded shrink-0"
-                    style={{
-                      backgroundColor: `hsl(${leftActivity!.color} / 0.15)`,
-                      color: `hsl(${leftActivity!.color})`,
-                    }}
+                  <button
+                    onClick={() => !isFrozen && handleLeftClick(hour)}
+                    disabled={isFrozen}
+                    className="flex-1 flex items-center gap-1.5 px-2 py-2 min-w-0"
                   >
-                    {leftActivity!.shortCode}
-                  </span>
-                </button>
+                    <span className="text-sm font-medium">{leftClient!.name}</span>
+                    <span
+                      className="text-[10px] font-bold px-1 py-0.5 rounded shrink-0"
+                      style={{
+                        backgroundColor: `hsl(${leftActivity!.color} / 0.15)`,
+                        color: `hsl(${leftActivity!.color})`,
+                      }}
+                    >
+                      {leftActivity!.shortCode}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => !isFrozen && handleRightClick(hour)}
+                    disabled={isFrozen}
+                    className="flex-1 py-2"
+                  />
+                </div>
               ) : (
                 <>
                   {/* Left half (:00) */}
