@@ -36,7 +36,7 @@ export function ClientSelector({ clients, selectedId, onSelect }: ClientSelector
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all",
                 selectedId === client.id
-                  ? "bg-card shadow-sm ring-2 ring-primary/30"
+                  ? "bg-card shadow-sm ring-[3px] ring-primary/50"
                   : "hover:bg-card/60 active:bg-card"
               )}
             >

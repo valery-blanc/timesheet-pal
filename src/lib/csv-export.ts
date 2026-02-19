@@ -51,17 +51,34 @@ export async function exportToCSV(
     return `${String(hh).padStart(2, "0")}:${mm}`;
   };
 
-  for (const entry of filtered) {
+  // Merge consecutive identical entries (same date, client, activity)
+  let i = 0;
+  while (i < filtered.length) {
+    const entry = filtered[i];
     const client = clientMap.get(entry.clientId);
     const activity = activityMap.get(entry.activityId);
+    let endSlot = entry.hour + 0.5;
+    // Look ahead for consecutive identical slots
+    while (
+      i + 1 < filtered.length &&
+      filtered[i + 1].date === entry.date &&
+      filtered[i + 1].clientId === entry.clientId &&
+      filtered[i + 1].activityId === entry.activityId &&
+      filtered[i + 1].hour === endSlot
+    ) {
+      endSlot += 0.5;
+      i++;
+    }
+    const duration = endSlot - entry.hour;
     rows.push([
       entry.date,
       client?.name || "?",
       activity?.label || "?",
       formatSlot(entry.hour),
-      formatSlot(entry.hour + 0.5),
-      "0.5",
+      formatSlot(endSlot),
+      String(duration),
     ]);
+    i++;
   }
 
   const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
