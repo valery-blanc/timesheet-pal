@@ -36,13 +36,13 @@ export function ActivityChips({ activities, selectedId, onSelect }: ActivityChip
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all shrink-0",
                 selectedId === activity.id
-                  ? "shadow-sm ring-2 ring-offset-1 ring-offset-background"
+                  ? "shadow-sm ring-[3px] ring-offset-1 ring-offset-background"
                   : "opacity-70 hover:opacity-100 active:opacity-100"
               )}
               style={{
                 backgroundColor: `hsl(${activity.color} / ${selectedId === activity.id ? 0.2 : 0.1})`,
                 color: `hsl(${activity.color})`,
-                boxShadow: selectedId === activity.id ? `0 0 0 2px hsl(${activity.color} / 0.3)` : undefined,
+                boxShadow: selectedId === activity.id ? `0 0 0 3px hsl(${activity.color} / 0.4)` : undefined,
               }}
             >
               <span className="font-bold">{activity.shortCode}</span>
